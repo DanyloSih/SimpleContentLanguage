@@ -4,6 +4,6 @@
     {
         public IElementRecognizer ElementRecognizer { get; }
 
-        public Result Parse(List<TokenizedLine> tokenizedLines, ElementBounds elementBounds);
+        public Result Parse(TokenizedBlock tokenizedBlock, TokenBounds elementBounds);
     }
 }

@@ -38,14 +38,15 @@ namespace SimpleContentLanguage
             StringBuilder lineBuilder = new StringBuilder();
 
             string? line;
-            int realLineCounter = -1;
+            int sourceLineCounter = -1;
+            int metaLineCounter = 0;
             int previousTokensBatchCount = 0;
             while ((line = getLineFunc()) != null)
             {
-                realLineCounter++;
+                sourceLineCounter++;
                 
                 ResultWithValue<List<Token>> lineTokensResult = Tokenizer.CreateTokens(
-                    realLineCounter, previousTokensBatchCount, line);
+                    sourceLineCounter, metaLineCounter, previousTokensBatchCount, lineBuilder.Length, line);
 
                 if (!lineTokensResult.IsSuccessful)
                 {
@@ -59,7 +60,7 @@ namespace SimpleContentLanguage
                     lineBuilder.Append(line);
                     if (processingElement != null)
                     {
-                        lines.Add(new TokenizedLine(lineBuilder.ToString(), tokens));
+                        lines.Add(new TokenizedLine(lineBuilder.ToString(), metaLineCounter++, tokens));
                     }
                     previousTokensBatchCount = 0;
                 }
@@ -82,8 +83,8 @@ namespace SimpleContentLanguage
                             {
                                 processingElement = parser;
                                 startToken = token;
-                                startTokenRealLineId = realLineCounter;
-                                lines.Add(new TokenizedLine(lineBuilder.ToString(), tokens));
+                                startTokenRealLineId = sourceLineCounter;
+                                lines.Add(new TokenizedLine(lineBuilder.ToString(), metaLineCounter++, tokens));
                             }
                         }
                     }
@@ -92,7 +93,9 @@ namespace SimpleContentLanguage
                     {
                         if (processingElement.ElementRecognizer.IsEnd(token))
                         {
-                            Result parsingResult = processingElement.Parse(lines, new ElementBounds(startToken, token));
+                            Result parsingResult = processingElement.Parse(
+                                new TokenizedBlock(lines), new TokenBounds(startToken, token));
+
                             if (!parsingResult.IsSuccessful)
                             {
                                 return new Result(false, parsingResult.ErrorMessage);

@@ -21,10 +21,11 @@ namespace SimpleContentLanguage
             MissingDelimeterErrorMessageFormat = missingDelimeterErrorMessage ?? string.Empty;
         }
 
-        public ResultWithValue<List<Token>> CreateTokens(int lineId, int firstTokenId, string line)
+        public ResultWithValue<List<Token>> CreateTokens(
+            int sourceLineId, int metaLineId, int firstTokenId, int firstMetaCharPos, string sourceLine)
         {
             List<Token> tokens = new List<Token>();
-            foreach (var result in IterateTokensInLine(lineId, firstTokenId, line))
+            foreach (var result in IterateTokensInLine(sourceLineId, metaLineId, firstTokenId, firstMetaCharPos, sourceLine))
             {
                 if (!result.IsSuccessful)
                 {
@@ -37,7 +38,8 @@ namespace SimpleContentLanguage
             return new ResultWithValue<List<Token>>(true, string.Empty, tokens);
         }
 
-        public IEnumerable<ResultWithValue<Token>> IterateTokensInLine(int lineId, int firstTokenId, string line)
+        public IEnumerable<ResultWithValue<Token>> IterateTokensInLine(
+            int sourceLineId, int metaLineId, int firstTokenId, int firstMetaCharPos, string line)
         {
             if (line == null)
                 yield break;
@@ -104,7 +106,7 @@ namespace SimpleContentLanguage
                             lastBuffered = null;
                         }
 
-                        string error = string.Format(MissingDelimeterErrorMessageFormat, lineId, tokenStartPos);
+                        string error = string.Format(MissingDelimeterErrorMessageFormat, sourceLineId + 1, tokenStartPos);
                         yield return new ResultWithValue<Token>(false, error, default);
                         yield break;
                     }
@@ -131,7 +133,9 @@ namespace SimpleContentLanguage
                     value: value,
                     isInsideDelimiter: isInsideDelimiter,
                     tokenId: tokenId,
-                    sourceLineId: lineId,
+                    metaLineId: metaLineId,
+                    firstCharPositionInMetaLine: firstMetaCharPos + tokenStartPos,
+                    sourceLineId: sourceLineId,
                     firstCharPositionInSourceLine: tokenStartPos,
                     isFirstInLine: !anyTokenYielded,
                     isLastInLine: false
@@ -150,15 +154,8 @@ namespace SimpleContentLanguage
             if (lastBuffered.HasValue)
             {
                 Token t = lastBuffered.Value;
-                yield return new ResultWithValue<Token>(true, string.Empty, new Token(
-                    value: t.Value,
-                    isInsideDelimiter: t.IsInsideDelimiter,
-                    tokenId: t.TokenId,
-                    sourceLineId: t.SourceLineId,
-                    firstCharPositionInSourceLine: t.FirstCharPositionInSourceLine,
-                    isFirstInLine: t.IsFirstInLine,
-                    isLastInLine: true
-                ));
+                t.IsLastInLine = true;
+                yield return new ResultWithValue<Token>(true, string.Empty, t);
             }
         }
     }

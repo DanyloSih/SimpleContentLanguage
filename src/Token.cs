@@ -2,18 +2,22 @@
 {
     public struct Token
     {
-        public readonly string Value;
-        public readonly bool IsInsideDelimiter;
-        public readonly int TokenId;
-        public readonly int SourceLineId;
-        public readonly int FirstCharPositionInSourceLine;
-        public readonly bool IsFirstInLine;
-        public readonly bool IsLastInLine;
+        public string Value;
+        public bool IsInsideDelimiter;
+        public int TokenId;
+        public int MetaLineId;
+        public int FirstCharPositionInMetaLine;
+        public int SourceLineId;
+        public int FirstCharPositionInSourceLine;
+        public bool IsFirstInLine;
+        public bool IsLastInLine;
 
         public Token(
             string value,
             bool isInsideDelimiter,
             int tokenId,
+            int metaLineId,
+            int firstCharPositionInMetaLine,
             int sourceLineId,
             int firstCharPositionInSourceLine,
             bool isFirstInLine,
@@ -22,6 +26,8 @@
             Value = value;
             IsInsideDelimiter = isInsideDelimiter;
             TokenId = tokenId;
+            MetaLineId = metaLineId;
+            FirstCharPositionInMetaLine = firstCharPositionInMetaLine;
             SourceLineId = sourceLineId;
             FirstCharPositionInSourceLine = firstCharPositionInSourceLine;
             IsFirstInLine = isFirstInLine;
