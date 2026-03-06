@@ -4,21 +4,15 @@ namespace SimpleContentLanguage
 {
     public class Tokenizer
     {
-        public readonly char StringDelimiter;
-        public readonly char EscapeChar;
-        public readonly string MissingDelimeterErrorMessageFormat;
+        private ParsingConfig _parsingConfig;
+        private ErrorsConfig _errorsConfig;
 
-        /// <param name="stringDelimiter">For example "</param>
-        /// <param name="escapeChar">In most cases it is \</param>
-        /// <param name="missingDelimeterErrorMessage">{0} — First delimeter line id (row); {1} — First delimeter position (column)</param>
         public Tokenizer(
-            char stringDelimiter, 
-            char escapeChar, 
-            string missingDelimeterErrorMessage)
+            ParsingConfig parsingConfig,
+            ErrorsConfig errorsConfig)
         {
-            StringDelimiter = stringDelimiter;
-            EscapeChar = escapeChar;
-            MissingDelimeterErrorMessageFormat = missingDelimeterErrorMessage ?? string.Empty;
+            _parsingConfig = parsingConfig;
+            _errorsConfig = errorsConfig;
         }
 
         public ResultWithValue<List<Token>> CreateTokens(
@@ -63,7 +57,7 @@ namespace SimpleContentLanguage
                 bool isInsideDelimiter = false;
                 var sb = new StringBuilder();
 
-                if (line[i] == StringDelimiter)
+                if (line[i] == _parsingConfig.StringDelimiter)
                 {
                     isInsideDelimiter = true;
                     i++;
@@ -75,10 +69,10 @@ namespace SimpleContentLanguage
                     {
                         char c = line[i];
 
-                        if (c == EscapeChar && i + 1 < len)
+                        if (c == _parsingConfig.EscapeChar && i + 1 < len)
                         {
                             char next = line[i + 1];
-                            if (next == StringDelimiter || next == EscapeChar)
+                            if (next == _parsingConfig.StringDelimiter || next == _parsingConfig.EscapeChar)
                             {
                                 sb.Append(next);
                                 i += 2;
@@ -86,7 +80,7 @@ namespace SimpleContentLanguage
                             }
                         }
 
-                        if (c == StringDelimiter)
+                        if (c == _parsingConfig.StringDelimiter)
                         {
                             i++;
                             closed = true;
@@ -106,7 +100,7 @@ namespace SimpleContentLanguage
                             lastBuffered = null;
                         }
 
-                        string error = string.Format(MissingDelimeterErrorMessageFormat, sourceLineId + 1, tokenStartPos);
+                        string error = _errorsConfig.GetMissingDelimeterError(sourceLineId + 1, tokenStartPos);
                         yield return new ResultWithValue<Token>(false, error, default);
                         yield break;
                     }
@@ -116,7 +110,7 @@ namespace SimpleContentLanguage
                     while (i < len)
                     {
                         char c = line[i];
-                        if (c == ' ' || c == StringDelimiter)
+                        if (c == ' ' || c == _parsingConfig.StringDelimiter)
                             break;
 
                         sb.Append(c);
@@ -130,7 +124,7 @@ namespace SimpleContentLanguage
                     continue;
 
                 Token token = new Token(
-                    value: value,
+                    text: value,
                     isInsideDelimiter: isInsideDelimiter,
                     tokenId: tokenId,
                     metaLineId: metaLineId,

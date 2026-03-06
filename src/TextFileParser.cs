@@ -1,18 +1,14 @@
-﻿namespace SimpleContentLanguage
+﻿
+namespace SimpleContentLanguage
 {
     public class TextFileParser : Parser
     {
-        /// <inheritdoc/>
         public TextFileParser(
-            Tokenizer tokenizer,
-            List<IElementParser> parsers,
-            string lineContinuationToken,
-            string endTokenAbsenceErrorMessageFormat) 
-        : base(
-            tokenizer,
-            parsers,
-            lineContinuationToken,
-            endTokenAbsenceErrorMessageFormat) { }
+            Tokenizer tokenizer, 
+            List<ElementParser> parsers, 
+            ParsingConfig parsingConfig, 
+            ErrorsConfig errorsConfig) 
+            : base(tokenizer, parsers, parsingConfig, errorsConfig) { }
 
         public Result ParseTextFile(string relativeTextFilePath)
         {

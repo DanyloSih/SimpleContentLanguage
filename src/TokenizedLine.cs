@@ -61,7 +61,7 @@
             if (endOnThisLine)
             {
                 int position = tokenBounds.EndToken.FirstCharPositionInMetaLine;
-                int length = tokenBounds.EndToken.Value?.Length ?? 0;
+                int length = tokenBounds.EndToken.Text?.Length ?? 0;
                 endIndexExclusive = Math.Clamp(position + length, 0, MetaLine.Length);
             }
 

@@ -2,7 +2,7 @@
 {
     public struct Token
     {
-        public string Value;
+        public string Text;
         public bool IsInsideDelimiter;
         public int TokenId;
         public int MetaLineId;
@@ -13,7 +13,7 @@
         public bool IsLastInLine;
 
         public Token(
-            string value,
+            string text,
             bool isInsideDelimiter,
             int tokenId,
             int metaLineId,
@@ -23,7 +23,7 @@
             bool isFirstInLine,
             bool isLastInLine)
         {
-            Value = value;
+            Text = text;
             IsInsideDelimiter = isInsideDelimiter;
             TokenId = tokenId;
             MetaLineId = metaLineId;
@@ -47,7 +47,7 @@
                 return sourceLine;
             }
 
-            int length = Value?.Length ?? 0;
+            int length = Text?.Length ?? 0;
 
             if (FirstCharPositionInSourceLine + length > sourceLine.Length)
             {

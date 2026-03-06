@@ -2,6 +2,6 @@
 {
     public interface IArgumentParser<TResult>
     {
-        public ResultWithValue<TResult> Parse(string argumentText);
+        public ResultWithValue<TResult> Parse(Token argumentToken);
     }
 }

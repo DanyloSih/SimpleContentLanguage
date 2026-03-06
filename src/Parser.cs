@@ -5,34 +5,30 @@ namespace SimpleContentLanguage
     public class Parser
     {
         public readonly Tokenizer Tokenizer;
-        public readonly List<IElementParser> Parsers;
-        public readonly string LineContinuationToken;
-        public readonly string EndTokenAbsenceErrorMessageFormat;
+        public readonly List<ElementParser> Parsers;
 
-        /// <param name="tokenizer"></param>
-        /// <param name="parsers"></param>
-        /// <param name="lineContinuationToken"></param>
-        /// <param name="endTokenAbsenceErrorMessageFormat">
-        /// {0} — Start token text; {1} — Start token line id (row); {2} — Start token position (column)</param>
+        private ParsingConfig _parsingConfig;
+        private ErrorsConfig _errorsConfig;
+
         public Parser(
             Tokenizer tokenizer,
-            List<IElementParser> parsers,
-            string lineContinuationToken,
-            string endTokenAbsenceErrorMessageFormat)
+            List<ElementParser> parsers,
+            ParsingConfig parsingConfig,
+            ErrorsConfig errorsConfig)
         {
             Tokenizer = tokenizer;
             Parsers = parsers;
-            LineContinuationToken = lineContinuationToken;
-            EndTokenAbsenceErrorMessageFormat = endTokenAbsenceErrorMessageFormat;
+            _parsingConfig = parsingConfig;
+            _errorsConfig = errorsConfig;
         }
 
         public Result Parse(Func<string?> getLineFunc)
         {
             List<TokenizedLine> lines = new();
 
-            IElementParser? processingElement = null;
+            ElementParser? processingElement = null;
             Token startToken = default;
-            int startTokenRealLineId = 0;
+            int startTokenSourceLineId = 0;
 
             List<Token> tokens = new List<Token>();
             StringBuilder lineBuilder = new StringBuilder();
@@ -55,7 +51,7 @@ namespace SimpleContentLanguage
 
                 tokens.AddRange(lineTokensResult.Value ?? new List<Token>());
 
-                if (tokens.Count == 0 || !tokens[^1].Value.Equals(LineContinuationToken))
+                if (tokens.Count == 0 || !tokens[^1].Text.Equals(_parsingConfig.LineContinuationToken))
                 {
                     lineBuilder.Append(line);
                     if (processingElement != null)
@@ -77,13 +73,13 @@ namespace SimpleContentLanguage
                 {
                     if (processingElement == null)
                     {
-                        foreach (IElementParser parser in Parsers)
+                        foreach (ElementParser parser in Parsers)
                         {
                             if (parser.ElementRecognizer.IsStart(token))
                             {
                                 processingElement = parser;
                                 startToken = token;
-                                startTokenRealLineId = sourceLineCounter;
+                                startTokenSourceLineId = sourceLineCounter;
                                 lines.Add(new TokenizedLine(lineBuilder.ToString(), metaLineCounter++, tokens));
                             }
                         }
@@ -112,11 +108,10 @@ namespace SimpleContentLanguage
 
             if (processingElement != null)
             {
-                string error = string.Format(
-                    EndTokenAbsenceErrorMessageFormat,
-                    startToken.Value,
-                    startTokenRealLineId + 1,
-                    startToken.FirstCharPositionInSourceLine);
+                string error = _errorsConfig.GetEndTokenAbsenceError(
+                    startTokenSourceLineId + 1,
+                    startToken.FirstCharPositionInSourceLine,
+                    startToken.Text!);
 
                 return new Result(true, error);
             }

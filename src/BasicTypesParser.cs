@@ -7,30 +7,31 @@ namespace SimpleContentLanguage
     {
         public readonly CultureInfo CultureInfo;
         public readonly string TypeName;
-        public readonly string ParsingErrorMessageFormat;
 
-        /// <param name="cultureInfo"></param>
-        /// <param name="typeName"></param>
-        /// <param name="errorMessageFormat">
-        /// {0} — Parsing type name; {1} — Argument text; </param>
+        private readonly ErrorsConfig _errorsConfig;
+
         public BasicTypesParser(
             CultureInfo cultureInfo, 
             string typeName, 
-            string errorMessageFormat)
+            ErrorsConfig errorsConfig)
         {
             CultureInfo = cultureInfo;
             TypeName = typeName;
-            ParsingErrorMessageFormat = errorMessageFormat;
+            _errorsConfig = errorsConfig;
         }
 
-        public ResultWithValue<TResult> Parse(string argumentText)
+        public ResultWithValue<TResult> Parse(Token argumentToken)
         {
-            bool isSuccessful = TResult.TryParse(argumentText, CultureInfo, out TResult? result);
+            bool isSuccessful = TResult.TryParse(argumentToken.Text, CultureInfo, out TResult? result);
             string errorMessage = string.Empty;
 
             if (!isSuccessful)
             {
-                errorMessage = string.Format(ParsingErrorMessageFormat, TypeName, argumentText);
+                errorMessage = _errorsConfig.GetArgumentParsingError(
+                    argumentToken.SourceLineId + 1, 
+                    argumentToken.FirstCharPositionInSourceLine,
+                    TypeName,
+                    argumentToken.Text);
             }
 
             return new ResultWithValue<TResult>(isSuccessful, errorMessage, result);

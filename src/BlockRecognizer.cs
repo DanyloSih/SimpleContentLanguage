@@ -13,12 +13,12 @@
 
         public virtual bool IsStart(Token token)
         {
-            return token.Value.Equals(StartToken);
+            return token.Text.Equals(StartToken);
         }
 
         public virtual bool IsEnd(Token token)
         {
-            return token.Value.Equals(EndToken);
+            return token.Text.Equals(EndToken);
         }
     }
 }
